@@ -5,10 +5,16 @@ on:
         branches: [main]
 
 permissions:
-    contents: write
+    contents: read
+    pages: write
+    id-token: write
+
+concurrency:
+    group: "pages"
+    cancel-in-progress: false
 
 jobs:
-    build-deploy:
+    build:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Source
@@ -17,26 +23,67 @@ jobs:
                   submodules: true
 
             - name: Install Nix
-              uses: DeterminateSystems/nix-installer-action@v16
+              uses: cachix/install-nix-action@v25
+              with:
+                  nix_path: nixpkgs=channel:nixos-unstable
 
-            - name: Magic Nix Cache
-              uses: DeterminateSystems/magic-nix-cache-action@v8
+            - name: Cache Nix Store
+              uses: actions/cache@v4
+              with:
+                  path: /tmp/nix-store-cache
+                  key: ${{ runner.os }}-nix-store-${{ hashFiles('flake.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-nix-store-
 
             - name: Build Site with Nix
               run: |
-                  nix develop --command bash -c "
-                    echo '🦀 Building inside Nix Environment...'
+                  # 开启 shell 的严格模式：任何命令报错立即退出
+                  set -e
 
-                    just -f ./wasm/justfile build demo
+                  echo "🚀 Starting Nix Build..."
+
+                  # 使用 --print-build-logs 查看详细下载过程
+                  nix develop --command bash -c "
+                    set -e # 在 nix shell 内部也要开启严格模式
+
+                    echo '🔍 Checking tools...'
+                    which zola
+                    zola --version
+                    which wasm-pack
+                    wasm-pack --version
+
+                    echo '🦀 Building Wasm...'
+                    chmod +x build_wasm.sh
+                    ./build_wasm.sh
 
                     echo '⚡ Building Zola...'
                     zola build
+
+                    echo '📂 Verifying Output...'
+                    if [ ! -d 'public' ]; then
+                      echo '❌ Error: public directory was not created!'
+                      exit 1
+                    fi
+
+                    # 列出文件以供调试 (确认 index.html 存在)
+                    ls -lh public/index.html
                   "
 
-            - name: Deploy to GitHub Pages
-              uses: peaceiris/actions-gh-pages@v4
+            - name: Setup Pages
+              uses: actions/configure-pages@v4
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
               with:
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
-                  publish_dir: ./public
-                  publish_branch: gh-pages
-                  commit_message: "deploy: ${{ github.event.head_commit.message }}"
+                  path: "./public"
+
+    deploy:
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        runs-on: ubuntu-latest
+        needs: build
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4
