@@ -53,8 +53,7 @@ jobs:
                     wasm-pack --version
 
                     echo '🦀 Building Wasm...'
-                    chmod +x build_wasm.sh
-                    ./build_wasm.sh
+                    just -f ./wasm/justfile build demo
 
                     echo '⚡ Building Zola...'
                     zola build
