@@ -7,7 +7,7 @@ description = "这个博客是如何使用zola构建的"
 就像构建和使用一个图灵完备机器的重要一步是用这个机器模仿自身一样，这个博客的第一篇文章，我希望其内容就是其构建过程。
 
 ### 为什么用zola？
-我是个传统的系统级编程语言使用者，对于脚本语言的使用并不熟练，只在很少的时候用一点python，主要使用c和rust，gemini告诉我既然如此，zola是不错的选择。
+我是个传统的系统级编程语言使用者，对于*高级编程语言*的使用并不熟练，只在很少的时候用一点python(比如跑AI、跑AI以及跑AI)，主要使用c和rust，gemini告诉我既然如此，zola是不错的选择。
 
 ### 构建
 首先安装zola，安装完毕后运行`zola init myblog`，这将构建一个基本的zola工程，接下来运行`zola serve`，这将启动一个本地服务器，让你能够实时预览
@@ -15,5 +15,15 @@ description = "这个博客是如何使用zola构建的"
 接下来，在[themes][1]中找一个自己喜欢的，一般其存储库中会详述如何使用
 
 ### 部署
+可以部署在github上，首先新建一个存储库，对于我来说可以起名为`codewenjiu.github.io`，然后将自己的代码上传上去
+
+然后需要跑ci，首先需要设置仓库权限，在`Settings/Actions/General`中，将`Workflow permissions`设置为`Read and write permissions`
+接下来新建一个`.github/workflows/deploy.yml`来自动跑ci，内容可以是
+
+{{ code(path=".github/workflows/deploy.yml", type="yml") }}
+
+将更改commit并push，你应当可以看到这次的commit后面多了个黄色圈圈，这说明它正在后台跑ci，等它跑完会有一个新的分支`gh-pages`生成(你也可以改成别的名字)
+
+在`Settings/Pages`的`Build and deployment`下，将`Source`设置为`gh-pages`，文件夹选`root`，Save之后就可以了，等待一会进入`Settings/Pages`就可以看到你的博客被挂在哪个网址了
 
 [1]: https://www.getzola.org/themes/
