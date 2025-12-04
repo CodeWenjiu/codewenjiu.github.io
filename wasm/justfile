@@ -7,5 +7,5 @@ _default:
 # build target wasm
 build ARG:
     @wasm-pack build {{ARG}} --target web
-    @mkdir ../static/{{ARG}}
+    @mkdir ../static/wasm/{{ARG}}
     @rsync -avc --delete {{ARG}}/pkg/ ../static/wasm/{{ARG}}/
