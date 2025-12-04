@@ -1,5 +1,9 @@
 set shell := [ "nu", "-c" ]
 
+# Default recipe
+_default:
+    @just --list
+
 # build target wasm
 build ARG:
     @wasm-pack build {{ARG}} --target web
