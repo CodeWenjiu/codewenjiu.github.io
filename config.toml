@@ -1,3 +1,5 @@
+theme = "terminus"
+title = ""
 # The URL the site will be built for
 base_url = "https://example.com"
 
